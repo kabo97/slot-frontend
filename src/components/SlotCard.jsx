@@ -1,18 +1,6 @@
-import { format } from "date-fns";
-import { toZonedTime  } from "date-fns-tz";
 import { formatKsaTime } from "../utils/time";
 
 const SlotCard = ({ slot, role, onBook }) => {
-  const timeZone = 'Asia/Riyadh';
-  const start = toZonedTime(new Date(slot.startTime), timeZone);
-  const end = toZonedTime(new Date(slot.endTime), timeZone);
-console.log({
-  raw: slot.startTime,
-  parsed: new Date(slot.startTime),
-  saTime: toZonedTime(new Date(slot.startTime), 'Asia/Riyadh'),
-  formatted: format(toZonedTime(new Date(slot.startTime), 'Asia/Riyadh'), 'hh:mm a')
-});
-
   return (
     <div
       className={`border px-4 py-3 rounded-xl text-center shadow ${
@@ -34,5 +22,4 @@ console.log({
     </div>
   );
 };
-
 export default SlotCard;

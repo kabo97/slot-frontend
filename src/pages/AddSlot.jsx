@@ -24,17 +24,16 @@ function AddSlot() {
     try {
       const res = await axios.get("/Slot/all");
       const conflict = res.data.find((s) => {
-        const otherStart = new Date(s.startTime);
-        const otherEnd = new Date(s.endTime);
-        return (
-          !(utcEnd <= otherStart || utcStart >= otherEnd) &&
-          s.status === "Available"
-        );
+      const otherStart = new Date(s.startTime);
+      const otherEnd = new Date(s.endTime);
+      return (
+        !(utcEnd <= otherStart || utcStart >= otherEnd) &&
+        s.status === "Available");
       });
 
       if (conflict) {
         setErrorMsg("⚠️ A conflicting slot already exists.");
-        setSuccessMsg(""); // clear success msg
+        setSuccessMsg(""); 
         return;
       }
       const newSlot = {
@@ -63,7 +62,6 @@ function AddSlot() {
       <SignOutButton />
       <div className="bg-gray-900 p-8 rounded-xl shadow-lg w-full max-w-md text-purple-500">
         <h1 className="text-2xl font-bold mb-6 text-center">Add New Slot</h1>
-
         <InputField label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         <InputField label="Start Time" type="time" step="1800" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
         <SelectField
@@ -73,10 +71,8 @@ function AddSlot() {
           options={["Available", "Booked", "Cancelled"]}
         />
         <AvailabilityToggle isAvailable={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} />
-
         {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>}
         {successMsg && <p className="text-green-500 text-sm mt-2">{successMsg}</p>}
-
         <button
           onClick={handleSubmit}
           className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded"
@@ -87,5 +83,4 @@ function AddSlot() {
     </div>
   );
 }
-
 export default AddSlot;

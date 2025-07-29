@@ -2,10 +2,7 @@ import React from "react";
 import SlotCard from "./SlotCard";
 import { format } from "date-fns";
 
-
 function SlotGroup({ date, slots, role, onBook }) {
-
-
   return (
     <div className="mb-10">
       <h3 className="text-lg font-semibold text-purple-600 mb-4 border-b border-gray-500 pb-1">

@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 
 function SignOutButton() {
   const navigate = useNavigate();
-
   const handleSignOut = () => {
     localStorage.clear();
     navigate("/");

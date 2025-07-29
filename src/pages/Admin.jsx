@@ -4,7 +4,6 @@ import SignOutButton from "../components/SignOutButton";
 
 function AdminPage() {
   const navigate = useNavigate();
-
   return (
     <div className="min-h-screen bg-gradient-to-tr from-gray-800 via-gray-900 to-black text-white px-6 py-10">
       <SignOutButton />

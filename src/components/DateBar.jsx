@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { format, addDays, subDays, isSameDay } from "date-fns";
+import { format, addDays, isSameDay } from "date-fns";
 
 const generateDates = (start, end) => {
   const dateArray = [];
@@ -39,7 +39,7 @@ const DateBar = ({ onSelectDate }) => {
   };
 
   useEffect(() => {
-    handleSelect(today); // default
+    handleSelect(today);
   }, []);
 
   return (

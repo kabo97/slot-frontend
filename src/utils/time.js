@@ -16,7 +16,7 @@ export function extractKsaTimeParts(utcString) {
   
   const hh = String(ksaDate.getHours()).padStart(2, '0');
   const mm = String(ksaDate.getMinutes()).padStart(2, '0');
-  const dateStr = ksaDate.toISOString().slice(0, 10); // YYYY-MM-DD
+  const dateStr = ksaDate.toISOString().slice(0, 10);
 
   return { time: `${hh}:${mm}`, date: dateStr };
 }
