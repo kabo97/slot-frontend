@@ -1,124 +1,83 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/axiosConfig";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
+import { groupSlotsByDate } from "../utils/groupSlotsByDate";
+import SlotGroup from "../components/SlotGroup";
+import AdminFilters from "../components/AdminFilters";
+import SignOutButton from "../components/SignOutButton";
 
+import DateBar from "../components/DateBar";
 function ViewSlot() {
   const [slots, setSlots] = useState([]);
-  const [filteredSlots, setFilteredSlots] = useState([]);
-  const [availabilityFilter, setAvailabilityFilter] = useState("All");
-  const [dateFilter, setDateFilter] = useState("");
+  const [groupedSlots, setGroupedSlots] = useState({});
+  const [availabilityFilter, setAvailabilityFilter] = useState("");
   const [userFilter, setUserFilter] = useState("");
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const role = localStorage.getItem("role");
-  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    fetchSlots();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [availabilityFilter, dateFilter, userFilter, slots]);
-
     const fetchSlots = async () => {
-        try {
-            const endpoint = role === "Admin" ? "/Slot/all" : "/Slot";
-            const res = await axios.get(endpoint);
-            setSlots(res.data);
-        } catch (err) {
-            console.error("Error fetching slots:", err);
+      try {
+        const endpoint = role === "Admin" ? "/Slot/all" : "/Slot";
+        const res = await axios.get(endpoint);
+        const data = res.data;
+
+        let filtered = [...data];
+        if (role === "User") {
+          filtered = filtered.filter((s) => s.status === "Available" && format(parseISO(s.startTime), "yyyy-MM-dd") === selectedDate);
+        } else {
+          if (availabilityFilter && availabilityFilter !== "All") {
+            filtered = filtered.filter((s) => s.status === availabilityFilter);
+            setSelectedDate("");
+        }else if (availabilityFilter === "All") {
+            setSelectedDate(""); 
         }
+          if (selectedDate) {
+            filtered = filtered.filter((s) => s.startTime.startsWith(selectedDate));
+          }
+          if (userFilter) {
+            filtered = filtered.filter((s) => s.createdByUserId == userFilter);
+          }
+        }
+        filtered.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        const grouped = groupSlotsByDate(filtered);
+        setGroupedSlots(grouped);
+        setSlots(data);
+      } catch (err) {
+        console.error("Error fetching slots:", err);
+      }
     };
 
+    fetchSlots();
+  }, [role, availabilityFilter, userFilter,selectedDate]);
 
-  const applyFilters = () => {
-    let result = [...slots];
-    if (role === "User") {
-      result = result.filter(s => s.status === "Available");
-    } else {
-      if (availabilityFilter !== "All") {
-        result = result.filter(s => s.status === availabilityFilter);
-      }
-      if (dateFilter) {
-        result = result.filter(s => s.startTime.startsWith(dateFilter));
-      }
-      if (userFilter) {
-        result = result.filter(s => s.createdByUserId == userFilter);
-      }
+  const handleBookSlot = async (id) => {
+    try {
+      const slot = slots.find((s) => s.slotId === id);
+      const updated = { ...slot, status: "Booked", isAvailable: false };
+      await axios.put(`/Slot/${id}`, updated);
+      window.location.reload(); 
+    } catch (err) {
+      console.error("Booking failed:", err);
     }
-    setFilteredSlots(result);
   };
 
-    const handleBookSlot = async (id) => {
-        try {
-            const existing = slots.find(s => s.slotId === id);
-
-            const updatedSlot = {
-            ...existing,
-            status: "Booked",
-            isAvailable: false,
-            };
-
-            await axios.put(`/Slot/${id}`, updatedSlot);
-            fetchSlots(); // refresh view
-        } catch (err) {
-            console.error("Booking failed:", err);
-        }
-    };
-
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-10">
-      <h1 className="text-3xl font-bold mb-6 text-center">Available Time Slots</h1>
-
-      {role === "Admin" && (
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="bg-gray-800 text-white px-4 py-2 rounded-md"
-          />
-          <select
-            value={availabilityFilter}
-            onChange={(e) => setAvailabilityFilter(e.target.value)}
-            className="bg-gray-800 text-white px-4 py-2 rounded-md"
-          >
-            <option value="All">All</option>
-            <option value="Available">Available</option>
-            <option value="Booked">Booked</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-          <input
-            type="number"
-            value={userFilter}
-            onChange={(e) => setUserFilter(e.target.value)}
-            placeholder="Filter by User ID"
-            className="bg-gray-800 text-white px-4 py-2 rounded-md"
-          />
-        </div>
-      )}
-
-      <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-6">
-        {filteredSlots.map((slot) => (
-          <div
-            key={slot.slotId}
-            className="bg-gray-800 rounded-xl p-6 shadow-lg flex flex-col justify-between"
-          >
-            <p className="text-lg font-semibold mb-2">
-              {format(new Date(slot.startTime), "MMM dd, yyyy HH:mm")} -{" "}
-              {format(new Date(slot.endTime), "HH:mm")}
-            </p>
-            <p className="text-sm text-gray-400">Status: {slot.status}</p>
-            {role === "User" && slot.status === "Available" && (
-              <button
-                onClick={() => handleBookSlot(slot.slotId)}
-                className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-              >
-                Book
-              </button>
-            )}
-          </div>
-        ))}
+    <div className="min-h-screen bg-gradient-to-tr from-gray-800 via-gray-900 to-black text-white flex flex-col items-center px-6 py-10">
+      <SignOutButton />
+      <div className="w-full max-w-5xl bg-gray-900 text-purple-600 rounded-2xl shadow-xl p-8">
+        <h2 className="text-2xl font-bold text-center mb-6">Time Slots</h2>
+        {role === "Admin" && (
+        <AdminFilters availabilityFilter={availabilityFilter} setAvailabilityFilter={setAvailabilityFilter} userFilter={userFilter} setUserFilter={setUserFilter}/>
+        )}
+        <DateBar selectedDate={selectedDate} onSelectDate={(date) => { setSelectedDate(date);if (role === "Admin") { setAvailabilityFilter("");}}}/>        
+        {Object.keys(groupedSlots).length === 0 ? (
+          <p className="text-center text-gray-400">No slots found</p>
+        ) : (
+        Object.entries(groupedSlots).map(([date, slots]) => (
+            <SlotGroup key={date} date={date} slots={slots} role={role} onBook={handleBookSlot} />
+        ))
+        )}
       </div>
     </div>
   );
